@@ -58,3 +58,46 @@ def touch_streak(profile):
     profile.last_active_date = today
     profile.save(update_fields=['streak_days', 'last_active_date'])
     return True
+
+
+# ---------------------------------------------------------------------------
+# AI automation: lightweight, dependency-free question generator.
+# Swap this implementation for an LLM API call later; views stay unchanged.
+# ---------------------------------------------------------------------------
+
+_TOPIC_BANKS = {
+    'math': [
+        ('What is 12 + 8?', '20'),
+        ('What is 15 - 7?', '8'),
+        ('What is 6 x 7?', '42'),
+        ('What is 81 / 9?', '9'),
+        ('What is the square root of 144?', '12'),
+    ],
+    'science': [
+        ('Which planet is known as the Red Planet?', 'Mars'),
+        ('What gas do plants absorb from the air?', 'carbon dioxide'),
+        ('What is the chemical symbol for water?', 'H2O'),
+        ('What force keeps us on the ground?', 'gravity'),
+        ('What is the center of an atom called?', 'nucleus'),
+    ],
+    'english': [
+        ('What is the plural of "child"?', 'children'),
+        ('Give a synonym of "quick".', 'fast'),
+        ('Which punctuation ends a question?', '?'),
+        ('What is the opposite of "ancient"?', 'modern'),
+        ('Name a verb in the sentence "She runs fast".', 'runs'),
+    ],
+    'history': [
+        ('In which year did World War II end?', '1945'),
+        ('Who was the first President of the Philippines?', 'Emilio Aguinaldo'),
+        ('Which empire built the Colosseum?', 'Roman'),
+        ('What year did the Philippines gain independence?', '1898'),
+        ('Which ocean is the largest?', 'Pacific'),
+    ],
+}
+
+
+def generate_quiz_questions(topic='math', count=5):
+    """Return a list of (text, answer) tuples for a quiz on the given topic."""
+    bank = _TOPIC_BANKS.get(topic.lower(), _TOPIC_BANKS['math'])
+    return bank[:max(1, count)]

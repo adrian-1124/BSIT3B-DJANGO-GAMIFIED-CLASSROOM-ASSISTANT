@@ -1,0 +1,45 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">{{ title }}</h2>
+  <div class="row g-3">
+    <div class="col-md-5">
+      <div class="card"><div class="card-body">
+        <h4>{% if editing %}Edit #{{ editing.pk }}{% else %}Add new{% endif %}</h4>
+        <form method="post">
+          {% csrf_token %}
+          {% if editing %}<input type="hidden" name="edit_pk" value="{{ editing.pk }}">{% endif %}
+          {{ form.as_p }}
+          <button class="btn btn-primary">Save</button>
+          {% if editing %}<a href="?" class="btn btn-link">Cancel</a>{% endif %}
+        </form>
+      </div></div>
+    </div>
+    <div class="col-md-7">
+      <div class="card"><div class="card-body">
+        <table class="table">
+          <thead><tr><th>ID</th><th>Name</th><th></th></tr></thead>
+          <tbody>
+            {% for o in objects %}
+            <tr>
+              <td>{{ o.pk }}</td>
+              <td>{{ o }}</td>
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="?edit={{ o.pk }}">Edit</a>
+                <form method="post" style="display:inline;" onsubmit="return confirm('Delete?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="delete" value="{{ o.pk }}">
+                  <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted">No items.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

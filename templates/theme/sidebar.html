@@ -107,7 +107,19 @@
             <span class="nav-link-title">Attendance</span>
           </a>
         </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.app_name == 'classroom' and 'staff' in request.path %}active{% endif %}" href="{% url 'classroom:staff' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-gear"></i></span>
+            <span class="nav-link-title">Staff Admin</span>
+          </a>
+        </li>
         {% endif %}
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'profile_update' %}active{% endif %}" href="{% url 'users:profile_update' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-user-pen"></i></span>
+            <span class="nav-link-title">My Profile</span>
+          </a>
+        </li>
 
         {% if user.is_authenticated %}
         <li class="nav-item d-lg-none">

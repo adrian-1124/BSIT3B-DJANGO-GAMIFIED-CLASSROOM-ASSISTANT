@@ -1,0 +1,14 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Staff Management</h2>
+  <div class="row row-cards">
+    <div class="col-md-4"><div class="card card-body"><h4>{{ badge_count }} Badges</h4><a href="{% url 'classroom:staff_badges' %}">Manage</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>{{ reward_count }} Rewards</h4><a href="{% url 'classroom:staff_rewards' %}">Manage</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>{{ class_count }} Classrooms</h4><a href="{% url 'classroom:staff_classrooms' %}">Manage</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>{{ assignment_count }} Assignments</h4><a href="{% url 'classroom:staff_assignments' %}">Manage</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>{{ quiz_count }} Quizzes</h4><a href="{% url 'classroom:quizzes' %}">View</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>AI Quiz Generator</h4><a href="{% url 'classroom:ai_quiz' %}">Generate</a></div></div>
+  </div>
+</div>
+{% endblock %}

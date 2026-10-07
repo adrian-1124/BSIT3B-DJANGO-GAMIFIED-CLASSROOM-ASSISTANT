@@ -7,10 +7,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import (
-    Assignment, AttendanceEntry, ClassRoom, Quiz,
+    Assignment, AttendanceEntry, Badge, ClassRoom, Question, Quiz,
     QuizAttempt, Reward, StudentProfile, Submission,
 )
 from .services import award_points, touch_streak
+from .forms import AIQuizForm, AssignmentForm, BadgeForm, ClassRoomForm, RewardForm
 
 User = get_user_model()
 
@@ -191,3 +192,85 @@ def rewards_view(request):
     return render(request, 'classroom/rewards.html', {
         'profile': profile, 'rewards': rewards, 'redemptions': redemptions,
     })
+
+
+# ---------------------------------------------------------------------------
+# Admin / Staff management (CRUD pages)
+# ---------------------------------------------------------------------------
+
+@teacher_required
+def staff_dashboard(request):
+    return render(request, 'classroom/staff.html', {
+        'badge_count': Badge.objects.count(),
+        'reward_count': Reward.objects.count(),
+        'class_count': ClassRoom.objects.count(),
+        'assignment_count': Assignment.objects.count(),
+        'quiz_count': Quiz.objects.count(),
+    })
+
+
+def _staff_crud(request, model, form_class, title):
+    editing_pk = request.GET.get('edit') or request.POST.get('edit_pk')
+    editing = model.objects.filter(pk=editing_pk).first() if editing_pk else None
+
+    if request.method == 'POST':
+        if request.POST.get('delete'):
+            obj = get_object_or_404(model, pk=request.POST['delete'])
+            obj.delete()
+            messages.success(request, f'{title} item deleted.')
+            return redirect(request.path_info)
+
+        form = form_class(request.POST, instance=editing)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            if model is ClassRoom and not obj.teacher_id:
+                obj.teacher = request.user
+            obj.save()
+            messages.success(request, f'{title} saved.')
+            return redirect(request.path_info)
+    else:
+        form = form_class(instance=editing)
+
+    return render(request, 'classroom/staff_crud.html', {
+        'objects': model.objects.all(), 'form': form, 'title': title, 'editing': editing,
+    })
+
+
+@teacher_required
+def staff_badges(request):
+    return _staff_crud(request, Badge, BadgeForm, 'Badges')
+
+
+@teacher_required
+def staff_rewards(request):
+    return _staff_crud(request, Reward, RewardForm, 'Rewards')
+
+
+@teacher_required
+def staff_classrooms(request):
+    return _staff_crud(request, ClassRoom, ClassRoomForm, 'Classrooms')
+
+
+@teacher_required
+def staff_assignments(request):
+    return _staff_crud(request, Assignment, AssignmentForm, 'Assignments')
+
+
+@teacher_required
+def ai_quiz(request):
+    if request.method == 'POST':
+        form = AIQuizForm(request.POST)
+        if form.is_valid():
+            from .services import generate_quiz_questions
+            quiz = Quiz.objects.create(
+                classroom=form.cleaned_data['classroom'],
+                title=form.cleaned_data['title'],
+                reward_points=form.cleaned_data['reward_points'],
+            )
+            for text, answer in generate_quiz_questions(form.cleaned_data['topic'], form.cleaned_data['count']):
+                Question.objects.create(quiz=quiz, text=text, answer=answer)
+            messages.success(request, f'AI generated quiz "{quiz.title}" with {quiz.questions.count()} questions.')
+            return redirect('classroom:quizzes')
+    else:
+        form = AIQuizForm()
+    return render(request, 'classroom/ai_quiz.html', {'form': form})

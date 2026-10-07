@@ -1,0 +1,36 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Update My Profile</h2>
+  <div class="card"><div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">First name</label>
+        <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}">
+        {% if errors.first_name %}<small class="text-red">{{ errors.first_name }}</small>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Last name</label>
+        <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ request.user.email }}">
+        {% if errors.email %}<small class="text-red">{{ errors.email }}</small>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">New password (leave blank to keep)</label>
+        <input type="password" name="password" class="form-control">
+        {% if errors.password %}<small class="text-red">{{ errors.password }}</small>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirm password</label>
+        <input type="password" name="confirm_password" class="form-control">
+        {% if errors.confirm_password %}<small class="text-red">{{ errors.confirm_password }}</small>{% endif %}
+      </div>
+      <button class="btn btn-primary">Save</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

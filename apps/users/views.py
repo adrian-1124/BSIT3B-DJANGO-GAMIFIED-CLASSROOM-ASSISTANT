@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -144,6 +144,45 @@ def user_save_ajax(request):
         "is_staff": user.is_staff,
         "is_active": user.is_active,
     })
+
+
+# PROFILE UPDATE (any logged-in admin/staff)
+@login_required(login_url='login')
+def profile_update(request):
+    errors = {}
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        confirm = request.POST.get('confirm_password', '')
+
+        if not first_name:
+            errors['first_name'] = 'First name is required.'
+        if email:
+            from django.core.validators import validate_email
+            try:
+                validate_email(email)
+            except Exception:
+                errors['email'] = 'Enter a valid email.'
+            if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+                errors['email'] = 'Email already in use.'
+        if password and len(password) < 8:
+            errors['password'] = 'Password must be at least 8 characters.'
+        if password != confirm:
+            errors['confirm_password'] = 'Passwords do not match.'
+
+        if not errors:
+            request.user.first_name = first_name
+            request.user.last_name = last_name
+            request.user.email = email
+            if password:
+                request.user.set_password(password)
+            request.user.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('users:profile_update')
+
+    return render(request, 'users/profile.html', {'errors': errors})
 
 
 # DELETE USER (AJAX)
