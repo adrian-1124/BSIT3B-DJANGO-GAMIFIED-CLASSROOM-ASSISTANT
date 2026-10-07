@@ -187,10 +187,11 @@ def _local_bank(topic, count):
     return generate_quiz_questions(topic, count)
 
 
-def ai_generate_quiz_questions(topic='math', count=5):
+def ai_generate_quiz_questions(topic='math', count=5, difficulty='medium', grade_level=''):
     """Generate quiz questions. Returns (items, provider_used)."""
+    audience = f' for {grade_level} students' if (grade_level or '').strip() else ' for students'
     prompt = (
-        f'Generate {count} short {topic} quiz questions for students. '
+        f'Generate {count} short {difficulty} {topic} quiz questions{audience}. '
         'Return ONLY a JSON array like '
         '[{"question": "...", "answer": "..."}] with no markdown.'
     )

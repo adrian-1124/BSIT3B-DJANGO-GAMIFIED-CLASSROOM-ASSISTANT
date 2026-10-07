@@ -29,10 +29,23 @@ class AssignmentForm(forms.ModelForm):
 
 
 class AIQuizForm(forms.Form):
+    TOPIC_SUGGESTIONS = [
+        'math', 'science', 'english', 'history', 'geography',
+        'programming', 'physics', 'chemistry', 'biology',
+        'filipino', 'health', 'economics',
+    ]
     classroom = forms.ModelChoiceField(queryset=ClassRoom.objects.all())
     title = forms.CharField(max_length=150)
-    topic = forms.ChoiceField(choices=[('math', 'Math'), ('science', 'Science'), ('english', 'English'), ('history', 'History')])
-    count = forms.IntegerField(min_value=1, max_value=5, initial=5)
+    topic = forms.CharField(
+        max_length=100,
+        help_text='Type any topic, e.g. "photosynthesis", "quadratic equations", "Philippine heroes".',
+    )
+    difficulty = forms.ChoiceField(
+        choices=[('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')],
+        initial='medium',
+    )
+    grade_level = forms.CharField(max_length=50, required=False, help_text='Optional, e.g. "Grade 7".')
+    count = forms.IntegerField(min_value=1, max_value=10, initial=5)
     reward_points = forms.IntegerField(min_value=1, initial=20)
 
 

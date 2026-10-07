@@ -3,12 +3,65 @@
 <div class="container-xl">
   <h2 class="page-title mb-3">AI Quiz Generator</h2>
   <div class="card"><div class="card-body">
-    <p class="text-muted">Automatically builds a quiz with ready-made questions and answers.</p>
+    <p class="text-muted">Type any specific topic — the AI builds the quiz with questions and answers.</p>
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button class="btn btn-primary">Generate Quiz</button>
+      <div class="mb-3">
+        <label class="form-label" for="id_classroom">Classroom</label>
+        {{ form.classroom }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="id_title">Quiz title</label>
+        {{ form.title }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="id_topic">Specific topic</label>
+        <input type="text" name="topic" id="id_topic" class="form-control"
+               list="topicSuggestions" placeholder='e.g. "photosynthesis", "quadratic equations"'
+               value="{{ form.topic.value|default:'' }}" required>
+        <datalist id="topicSuggestions">
+          {% for s in topic_suggestions %}
+          <option value="{{ s }}">
+          {% endfor %}
+        </datalist>
+        {% if form.topic.errors %}<small class="text-red">{{ form.topic.errors.0 }}</small>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Quick topics</label>
+        <div>
+          {% for s in topic_suggestions %}
+          <button type="button" class="btn btn-sm btn-outline-primary mb-1 topic-chip" data-topic="{{ s }}">{{ s|title }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label" for="id_difficulty">Difficulty</label>
+          {{ form.difficulty }}
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label" for="id_grade_level">Grade level (optional)</label>
+          {{ form.grade_level }}
+        </div>
+        <div class="col-md-2 mb-3">
+          <label class="form-label" for="id_count">Questions</label>
+          {{ form.count }}
+        </div>
+        <div class="col-md-2 mb-3">
+          <label class="form-label" for="id_reward_points">XP reward</label>
+          {{ form.reward_points }}
+        </div>
+      </div>
+      <button class="btn btn-primary"><i class="fa fa-robot"></i> Generate Quiz</button>
     </form>
   </div></div>
 </div>
+<script>
+  document.querySelectorAll('.topic-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.getElementById('id_topic').value = chip.dataset.topic;
+      document.getElementById('id_topic').focus();
+    });
+  });
+</script>
 {% endblock %}

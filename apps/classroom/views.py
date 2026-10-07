@@ -361,7 +361,10 @@ def ai_quiz(request):
                 reward_points=form.cleaned_data['reward_points'],
             )
             items, provider = ai_generate_quiz_questions(
-                form.cleaned_data['topic'], form.cleaned_data['count'])
+                form.cleaned_data['topic'], form.cleaned_data['count'],
+                difficulty=form.cleaned_data.get('difficulty', 'medium'),
+                grade_level=form.cleaned_data.get('grade_level', ''),
+            )
             for text, answer in items:
                 Question.objects.create(quiz=quiz, text=text, answer=answer)
             messages.success(
@@ -371,7 +374,9 @@ def ai_quiz(request):
             return redirect('classroom:quizzes')
     else:
         form = AIQuizForm()
-    return render(request, 'classroom/ai_quiz.html', {'form': form})
+    return render(request, 'classroom/ai_quiz.html', {
+        'form': form, 'topic_suggestions': AIQuizForm.TOPIC_SUGGESTIONS,
+    })
 
 
 @login_required(login_url='login')
