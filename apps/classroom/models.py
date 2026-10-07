@@ -152,7 +152,7 @@ class Submission(models.Model):
 
 
 class AttendanceEntry(models.Model):
-    STATUS_CHOICES = [('present', 'Present'), ('absent', 'Absent'), ('late', 'Late')]
+    STATUS_CHOICES = [('present', 'Present'), ('absent', 'Absent'), ('late', 'Late'), ('excused', 'Excused')]
     classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='attendance')
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendance')
     date = models.DateField()

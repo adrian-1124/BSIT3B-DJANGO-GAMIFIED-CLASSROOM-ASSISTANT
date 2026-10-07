@@ -95,7 +95,13 @@ def attendance_view(request):
             day = date.today()
 
         for student in classroom.students.select_related('user').all():
-            status = request.POST.get(f'status_{student.user_id}', 'absent')
+            checked = request.POST.getlist(f'status_{student.user_id}')
+            for choice in ('present', 'late', 'excused', 'absent'):
+                if choice in checked:
+                    status = choice
+                    break
+            else:
+                status = 'absent'
             entry, created = AttendanceEntry.objects.get_or_create(
                 classroom=classroom, student=student.user, date=day,
                 defaults={'status': status},
@@ -107,6 +113,7 @@ def attendance_view(request):
                 award_points(student, 5, f'Attendance on {day}')
             elif status == 'late':
                 award_points(student, 2, f'Late attendance on {day}')
+            # absent / excused award no points
 
         messages.success(request, 'Attendance saved.')
         return redirect('classroom:attendance')

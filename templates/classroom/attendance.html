@@ -29,11 +29,12 @@
           <tr>
             <td>{{ s.user.username }}</td>
             <td>
-              <select name="status_{{ s.user_id }}" class="form-select" style="max-width: 180px;">
-                <option value="present">Present (+5)</option>
-                <option value="late">Late (+2)</option>
-                <option value="absent">Absent (0)</option>
-              </select>
+              <div class="d-flex gap-3" data-status-group="status_{{ s.user_id }}">
+                <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="present"> Present (+5)</label>
+                <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="late"> Late (+2)</label>
+                <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="excused"> Excused</label>
+                <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="absent"> Absent</label>
+              </div>
             </td>
           </tr>
           {% empty %}
@@ -45,4 +46,15 @@
     </form>
   </div></div>
 </div>
+<script>
+  document.querySelectorAll('[data-status-group]').forEach(function (group) {
+    group.addEventListener('change', function (e) {
+      if (e.target.classList.contains('status-check') && e.target.checked) {
+        group.querySelectorAll('.status-check').forEach(function (cb) {
+          if (cb !== e.target) cb.checked = false;
+        });
+      }
+    });
+  });
+</script>
 {% endblock %}
