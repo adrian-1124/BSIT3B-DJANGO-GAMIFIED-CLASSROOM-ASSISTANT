@@ -1,0 +1,26 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Leaderboard</h2>
+  <div class="card"><div class="card-body">
+    <table class="table">
+      <thead><tr><th>#</th><th>Student</th><th>Class</th><th>Level</th><th>XP</th><th>Points</th><th>Streak</th></tr></thead>
+      <tbody>
+        {% for p in profiles %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ p.avatar_emoji }} {{ p.user.username }}</td>
+          <td>{{ p.classroom|default:"—" }}</td>
+          <td>{{ p.level }}</td>
+          <td>{{ p.xp }}</td>
+          <td>{{ p.points }}</td>
+          <td>{{ p.streak_days }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-muted">No students yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+</div>
+{% endblock %}

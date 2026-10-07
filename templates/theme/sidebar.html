@@ -59,6 +59,56 @@
           </a>
         </li>
 
+        <li class="nav-item">
+          <span class="dh-nav-section">
+            Classroom
+          </span>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.app_name == 'classroom' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'classroom:dashboard' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-trophy"></i></span>
+            <span class="nav-link-title">Student Hub</span>
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}" href="{% url 'classroom:leaderboard' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-ranking-star"></i></span>
+            <span class="nav-link-title">Leaderboard</span>
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'quizzes' %}active{% endif %}" href="{% url 'classroom:quizzes' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-question-circle"></i></span>
+            <span class="nav-link-title">Quizzes</span>
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'assignments' %}active{% endif %}" href="{% url 'classroom:assignments' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-clipboard-list"></i></span>
+            <span class="nav-link-title">Assignments</span>
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'rewards' %}active{% endif %}" href="{% url 'classroom:rewards' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-gift"></i></span>
+            <span class="nav-link-title">Rewards</span>
+          </a>
+        </li>
+        {% if user.is_staff %}
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'award' %}active{% endif %}" href="{% url 'classroom:award' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-star"></i></span>
+            <span class="nav-link-title">Award Points</span>
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a class="nav-link {% if request.resolver_match.url_name == 'attendance' %}active{% endif %}" href="{% url 'classroom:attendance' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="fa fa-calendar-check"></i></span>
+            <span class="nav-link-title">Attendance</span>
+          </a>
+        </li>
+        {% endif %}
+
         {% if user.is_authenticated %}
         <li class="nav-item d-lg-none">
           <a class="nav-link" href="{% url 'logout' %}">

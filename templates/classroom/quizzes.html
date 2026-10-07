@@ -1,0 +1,29 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Quizzes</h2>
+  <div class="card"><div class="card-body">
+    <table class="table">
+      <thead><tr><th>Title</th><th>Questions</th><th>Reward</th><th></th></tr></thead>
+      <tbody>
+        {% for q in quizzes %}
+        <tr>
+          <td>{{ q.title }}</td>
+          <td>{{ q.questions.count }}</td>
+          <td>{{ q.reward_points }} XP</td>
+          <td>
+            {% if q.pk in attempted %}
+            <span class="badge bg-green">Completed</span>
+            {% else %}
+            <a class="btn btn-sm btn-primary" href="{% url 'classroom:quiz_take' q.pk %}">Take</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">No quizzes yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+</div>
+{% endblock %}

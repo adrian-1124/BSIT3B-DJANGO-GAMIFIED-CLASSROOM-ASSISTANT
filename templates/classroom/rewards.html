@@ -1,0 +1,31 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Rewards Shop — <span class="text-blue">{{ profile.points }} pts</span></h2>
+  <div class="row row-cards">
+    {% for r in rewards %}
+    <div class="col-md-4">
+      <div class="card"><div class="card-body">
+        <h4>{{ r.name }}</h4>
+        <p class="text-muted">{{ r.description }}</p>
+        <p><strong>{{ r.cost }} pts</strong></p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="reward" value="{{ r.pk }}">
+          <button class="btn btn-primary btn-sm" {% if profile.points < r.cost %}disabled{% endif %}>Redeem</button>
+        </form>
+      </div></div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No rewards configured.</p>
+    {% endfor %}
+  </div>
+  <hr>
+  <h4>My Redemptions</h4>
+  <ul>
+    {% for r in redemptions %}
+    <li>{{ r.reward.name }} — {{ r.redeemed_at|date:'Y-m-d' }} {% if r.fulfilled %}✅{% else %}⏳{% endif %}</li>
+    {% empty %}<li class="text-muted">None yet.</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

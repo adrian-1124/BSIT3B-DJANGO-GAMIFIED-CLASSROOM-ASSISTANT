@@ -1,0 +1,48 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">Attendance</h2>
+  <div class="card mb-3"><div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">Classroom</label>
+        <select name="classroom" class="form-select" onchange="this.form.submit()">
+          {% for c in classrooms %}
+          <option value="{{ c.pk }}" {% if selected and c.pk == selected.pk %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div></div>
+  <div class="card"><div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="classroom" value="{{ selected.pk }}">
+      <div class="mb-3">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" class="form-control" style="max-width: 220px;" value="{{ today|date:'Y-m-d' }}">
+      </div>
+      <table class="table">
+        <thead><tr><th>Student</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>{{ s.user.username }}</td>
+            <td>
+              <select name="status_{{ s.user_id }}" class="form-select" style="max-width: 180px;">
+                <option value="present">Present (+5)</option>
+                <option value="late">Late (+2)</option>
+                <option value="absent">Absent (0)</option>
+              </select>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="text-muted">No students enrolled in this class.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button class="btn btn-primary" {% if not students %}disabled{% endif %}>Save Attendance</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}
