@@ -1,5 +1,6 @@
 {% extends "theme/base.html" %}
 {% block content %}
+<div class="container-xl">
   <h2 class="page-title mb-3">Attendance</h2>
   <div class="card mb-3"><div class="card-body">
     <form method="get" class="row g-3 align-items-end">
@@ -21,14 +22,14 @@
         <label class="form-label">Date</label>
         <input type="date" name="date" class="form-control" style="max-width: 220px;" value="{{ today|date:'Y-m-d' }}">
       </div>
-      <table class="table table-responsive" style="width:100%;">
-        <thead><tr><th style="width:200px;">Student</th><th>Status</th></tr></thead>
+      <table class="table">
+        <thead><tr><th>Student</th><th>Status</th></tr></thead>
         <tbody>
           {% for s in students %}
           <tr>
             <td>{{ s.user.username }}</td>
             <td>
-              <div class="d-flex flex-wrap gap-3" data-status-group="status_{{ s.user_id }}">
+              <div class="d-flex gap-3" data-status-group="status_{{ s.user_id }}">
                 <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="present"> Present (+5)</label>
                 <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="late"> Late (+2)</label>
                 <label class="form-check"><input type="checkbox" class="form-check-input status-check" name="status_{{ s.user_id }}" value="excused"> Excused</label>
@@ -44,6 +45,7 @@
       <button class="btn btn-primary" {% if not students %}disabled{% endif %}>Save Attendance</button>
     </form>
   </div></div>
+</div>
 <script>
   document.querySelectorAll('[data-status-group]').forEach(function (group) {
     group.addEventListener('change', function (e) {
