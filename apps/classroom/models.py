@@ -117,6 +117,7 @@ class QuizAttempt(models.Model):
     score = models.PositiveIntegerField(default=0)
     total = models.PositiveIntegerField(default=0)
     points_earned = models.PositiveIntegerField(default=0)
+    answers = models.JSONField(default=dict, blank=True)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

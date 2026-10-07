@@ -1,0 +1,20 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">{{ quiz.title }} — Review Answers</h2>
+  <p class="text-muted">Your score: <strong>{{ attempt.score }}/{{ attempt.total }}</strong> • Earned <strong>{{ attempt.points_earned }} XP</strong></p>
+  {% for row in rows %}
+  <div class="card mb-3"><div class="card-body">
+    <h4><span class="badge {% if row.is_correct %}bg-green{% else %}bg-red{% endif %}">{{ forloop.counter }}</span> {{ row.question.text }}</h4>
+    <p class="mb-1">Your answer: <strong class="{% if row.is_correct %}text-green{% else %}text-red{% endif %}">{{ row.student_answer|default:"(blank)" }}</strong>
+      {% if row.is_correct %}✅{% else %}❌{% endif %}</p>
+    {% if not row.is_correct %}
+    <p class="mb-0">Correct answer: <strong class="text-green">{{ row.question.answer }}</strong></p>
+    {% endif %}
+  </div></div>
+  {% empty %}
+  <p class="text-muted">This quiz has no questions.</p>
+  {% endfor %}
+  <a href="{% url 'classroom:quizzes' %}" class="btn btn-primary">Back to quizzes</a>
+</div>
+{% endblock %}

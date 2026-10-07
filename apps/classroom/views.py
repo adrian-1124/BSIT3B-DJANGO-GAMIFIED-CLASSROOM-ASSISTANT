@@ -158,21 +158,23 @@ def quiz_take(request, pk):
     profile = _profile_for(request.user)
 
     if QuizAttempt.objects.filter(profile=profile, quiz=quiz).exists():
-        messages.info(request, 'You already took this quiz.')
-        return redirect('classroom:quizzes')
+        messages.info(request, 'You already took this quiz — showing your answers.')
+        return redirect('classroom:quiz_review', pk=quiz.pk)
 
     questions = list(quiz.questions.all())
 
     if request.method == 'POST':
         score = 0
+        given_answers = {}
         for q in questions:
-            given = request.POST.get(f'q_{q.id}', '').strip().lower()
-            if given == q.answer.strip().lower():
+            given = request.POST.get(f'q_{q.id}', '').strip()
+            given_answers[str(q.id)] = given
+            if given.lower() == q.answer.strip().lower():
                 score += 1
 
         total = len(questions)
         earned = round(quiz.reward_points * (score / total)) if total else 0
-        QuizAttempt.objects.create(profile=profile, quiz=quiz, score=score, total=total, points_earned=earned)
+        QuizAttempt.objects.create(profile=profile, quiz=quiz, score=score, total=total, points_earned=earned, answers=given_answers)
         if earned:
             award_points(profile, earned, f'Quiz: {quiz.title}')
         from .ai import ai_quiz_feedback
@@ -183,6 +185,26 @@ def quiz_take(request, pk):
         })
 
     return render(request, 'classroom/quiz_take.html', {'quiz': quiz, 'questions': questions})
+
+
+@login_required(login_url='login')
+def quiz_review(request, pk):
+    """Review a completed quiz: correct answers vs the student's answers."""
+    quiz = get_object_or_404(Quiz, pk=pk)
+    profile = _profile_for(request.user)
+    attempt = get_object_or_404(QuizAttempt, profile=profile, quiz=quiz)
+    given = attempt.answers or {}
+    rows = []
+    for q in quiz.questions.all():
+        student_answer = given.get(str(q.id), '')
+        rows.append({
+            'question': q,
+            'student_answer': student_answer,
+            'is_correct': (student_answer or '').strip().lower() == q.answer.strip().lower(),
+        })
+    return render(request, 'classroom/quiz_review.html', {
+        'quiz': quiz, 'attempt': attempt, 'rows': rows,
+    })
 
 
 @login_required(login_url='login')

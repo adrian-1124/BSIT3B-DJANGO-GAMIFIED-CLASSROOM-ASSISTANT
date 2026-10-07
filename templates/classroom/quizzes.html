@@ -14,6 +14,7 @@
           <td>
             {% if q.pk in attempted %}
             <span class="badge bg-green">Completed</span>
+            <a class="btn btn-sm btn-outline-primary ms-1" href="{% url 'classroom:quiz_review' q.pk %}">Review answers</a>
             {% else %}
             <a class="btn btn-sm btn-primary" href="{% url 'classroom:quiz_take' q.pk %}">Take</a>
             {% endif %}

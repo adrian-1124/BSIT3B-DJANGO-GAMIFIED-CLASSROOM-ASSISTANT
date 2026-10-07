@@ -11,6 +11,7 @@
       <br><small class="text-muted">AI feedback via {{ feedback_provider }}</small>
     </div>
     {% endif %}
+    <a href="{% url 'classroom:quiz_review' quiz.pk %}" class="btn btn-outline-primary">Review answers</a>
     <a href="{% url 'classroom:quizzes' %}" class="btn btn-primary">Back to quizzes</a>
   </div></div>
 </div>
