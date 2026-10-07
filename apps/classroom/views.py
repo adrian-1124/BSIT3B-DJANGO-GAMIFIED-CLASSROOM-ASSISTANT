@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import (
     Assignment, AttendanceEntry, Badge, ClassRoom, Question, Quiz,
-    QuizAttempt, Reward, StudentProfile, Submission,
+    QuizAttempt, Redemption, Reward, StudentProfile, Submission,
 )
 from .services import award_points, touch_streak
 from .forms import (
@@ -207,22 +207,33 @@ def submit_assignment(request, pk):
 
 @login_required(login_url='login')
 def rewards_view(request):
+    from django.db.models import Count, Q
     profile = _profile_for(request.user)
-    rewards = Reward.objects.all()
+    rewards = Reward.objects.annotate(
+        my_redemptions=Count('redemption', filter=Q(redemption__profile=profile)),
+    ).order_by('cost')
 
     if request.method == 'POST':
         reward = get_object_or_404(Reward, pk=request.POST.get('reward'))
         if profile.points >= reward.cost:
             award_points(profile, -reward.cost, f'Redeemed: {reward.name}')
-            Redemption.objects.create(profile=profile, reward=reward)
+            redemption = Redemption.objects.create(profile=profile, reward=reward)
+            request.session['just_redeemed'] = {
+                'reward': reward.name,
+                'description': reward.description,
+                'cost': reward.cost,
+                'id': redemption.pk,
+            }
             messages.success(request, f'You redeemed {reward.name}!')
         else:
             messages.error(request, 'Not enough points.')
         return redirect('classroom:rewards')
 
-    redemptions = profile.redemptions.select_related('reward').all()[:10]
+    just_redeemed = request.session.pop('just_redeemed', None)
+    redemptions = profile.redemptions.select_related('reward').all()[:20]
     return render(request, 'classroom/rewards.html', {
         'profile': profile, 'rewards': rewards, 'redemptions': redemptions,
+        'just_redeemed': just_redeemed,
     })
 
 
