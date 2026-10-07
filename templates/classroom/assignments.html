@@ -4,7 +4,7 @@
   <h2 class="page-title mb-3">Assignments</h2>
   <div class="card"><div class="card-body">
     <table class="table">
-      <thead><tr><th>Title</th><th>Class</th><th>Due</th><th>Points</th><th></th></tr></thead>
+      <thead><tr><th>Title</th><th>Class</th><th>Due</th><th>Points</th><th>Submit</th></tr></thead>
       <tbody>
         {% for a in assignments %}
         <tr>
@@ -13,14 +13,20 @@
           <td>{{ a.due_date|default:"—" }}</td>
           <td>{{ a.points }}</td>
           <td>
-            {% if a.pk in submitted %}
-            <span class="badge bg-green">Submitted</span>
-            {% else %}
-            <form method="post" action="{% url 'classroom:submit_assignment' a.pk %}" style="display:inline;">
+            <form method="post" action="{% url 'classroom:submit_assignment' a.pk %}" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
               {% csrf_token %}
+              <label class="btn btn-sm btn-outline-secondary mb-0">
+                <i class="fa fa-paperclip"></i> Choose file
+                <input type="file" name="file" hidden onchange="this.form.querySelector('.file-name').textContent = this.files[0] ? this.files[0].name : ''">
+              </label>
+              <small class="file-name text-muted"></small>
+              {% if a.pk in submitted %}
+              <span class="badge bg-green">Submitted</span>
+              <button class="btn btn-sm btn-outline-primary">Update file</button>
+              {% else %}
               <button class="btn btn-sm btn-primary">Submit</button>
+              {% endif %}
             </form>
-            {% endif %}
           </td>
         </tr>
         {% empty %}

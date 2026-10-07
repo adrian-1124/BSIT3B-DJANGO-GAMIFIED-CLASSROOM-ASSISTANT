@@ -141,6 +141,7 @@ class Submission(models.Model):
     STATUS_CHOICES = [('submitted', 'Submitted'), ('graded', 'Graded')]
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submissions')
+    file = models.FileField(upload_to='submissions/', null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='submitted')
     grade = models.PositiveIntegerField(null=True, blank=True)

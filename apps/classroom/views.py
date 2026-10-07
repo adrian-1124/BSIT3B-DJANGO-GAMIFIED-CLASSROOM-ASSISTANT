@@ -188,18 +188,28 @@ def quiz_take(request, pk):
 @login_required(login_url='login')
 def assignments_view(request):
     assignments = Assignment.objects.select_related('classroom').all()
-    submitted = Submission.objects.filter(student=request.user).values_list('assignment_id', flat=True)
-    return render(request, 'classroom/assignments.html', {'assignments': assignments, 'submitted': set(submitted)})
+    my_submissions = {s.assignment_id: s for s in Submission.objects.filter(student=request.user)}
+    return render(request, 'classroom/assignments.html', {
+        'assignments': assignments,
+        'submitted': set(my_submissions.keys()),
+        'my_submissions': my_submissions,
+    })
 
 
 @login_required(login_url='login')
 @require_POST
 def submit_assignment(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
+    uploaded = request.FILES.get('file')
     submission, created = Submission.objects.get_or_create(assignment=assignment, student=request.user)
+    if uploaded:
+        submission.file = uploaded
+        submission.save(update_fields=['file'])
     if created:
         award_points(_profile_for(request.user), 10, f'Submitted: {assignment.title}')
         messages.success(request, 'Assignment submitted! +10 XP')
+    elif uploaded:
+        messages.success(request, 'File attached to your submission.')
     else:
         messages.info(request, 'Already submitted.')
     return redirect('classroom:assignments')
