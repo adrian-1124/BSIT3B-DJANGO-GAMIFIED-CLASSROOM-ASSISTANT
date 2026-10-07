@@ -21,4 +21,9 @@ urlpatterns = [
     path('staff/classrooms/', views.staff_classrooms, name='staff_classrooms'),
     path('staff/assignments/', views.staff_assignments, name='staff_assignments'),
     path('staff/ai-quiz/', views.ai_quiz, name='ai_quiz'),
+    path('ai-study/', views.ai_study, name='ai_study'),
+    path('ai-architecture/', views.ai_architecture, name='ai_architecture'),
+    path('staff/ai-assignment/', views.ai_assignment, name='ai_assignment'),
+    path('staff/ai-insights/', views.ai_insights, name='ai_insights'),
+    path('staff/ai-settings/', views.ai_settings, name='ai_settings'),
 ]

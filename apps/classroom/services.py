@@ -61,47 +61,17 @@ def touch_streak(profile):
 
 
 def generate_quiz_questions_openrouter(topic='math', count=5):
-    """Call the OpenRouter API (free model) to generate quiz questions.
-
-    Falls back to the Gemini generator, then the local bank.
-    """
-    import json
-    import os
-
-    api_key = os.environ.get('OPENROUTER_API_KEY')
-    env_file_key = _get_env_value('OPENROUTER_API_KEY')
-    api_key = api_key or env_file_key
-    model = os.environ.get('OPENROUTER_MODEL') or _get_env_value('OPENROUTER_MODEL') or 'openrouter/free'
-    if not api_key:
-        return generate_quiz_questions_gemini(topic, count)
-
-    prompt = (
-        f'Generate {count} short {topic} quiz questions for students. '
-        'Return ONLY a JSON array like '
-        '[{"question": "...", "answer": "..."}] with no markdown.'
-    )
-    try:
-        import requests
-        resp = requests.post(
-            'https://openrouter.ai/api/v1/chat/completions',
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={'model': model, 'messages': [{'role': 'user', 'content': prompt}]},
-            timeout=60,
-        )
-        if resp.status_code != 200:
-            return generate_quiz_questions_gemini(topic, count)
-        text = resp.json()['choices'][0]['message']['content'].strip()
-        if text.startswith('```'):
-            text = text.strip('`').lstrip('json').strip()
-        items = json.loads(text)
-        return [(item['question'], item['answer']) for item in items[:count]]
-    except Exception:
-        return generate_quiz_questions_gemini(topic, count)
+    """Legacy entry point — now delegates to the central AI layer."""
+    from .ai import ai_generate_quiz_questions
+    items, _ = ai_generate_quiz_questions(topic, count)
+    return items
 
 
 def generate_quiz_questions_ai(topic='math', count=5):
-    """Best available AI provider: OpenRouter (free) -> Gemini -> local bank."""
-    return generate_quiz_questions_openrouter(topic, count)
+    """Best available AI provider: OpenRouter -> Gemini -> local bank."""
+    from .ai import ai_generate_quiz_questions
+    items, _ = ai_generate_quiz_questions(topic, count)
+    return items
 
 
 # ---------------------------------------------------------------------------
@@ -166,44 +136,7 @@ def _get_gemini_key():
 
 
 def generate_quiz_questions_gemini(topic='math', count=5):
-    """Call the Gemini API to generate quiz questions.
-
-    Returns list of (text, answer) tuples, or falls back to the local bank
-    when no API key is configured or the request fails.
-    """
-    import json
-
-    api_key = _get_gemini_key()
-    if not api_key:
-        return generate_quiz_questions(topic, count)
-
-    prompt = (
-        f'Generate {count} short {topic} quiz questions for students. '
-        'Return ONLY a JSON array like '
-        '[{"question": "...", "answer": "..."}] with no markdown.'
-    )
-    payload = {'contents': [{'parts': [{'text': prompt}]}]}
-
-    try:
-        import requests
-        for model in ('gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash'):
-            url = (
-                'https://generativelanguage.googleapis.com/v1beta/models/'
-                f'{model}:generateContent?key={api_key}'
-            )
-            try:
-                resp = requests.post(url, json=payload, timeout=30)
-                if resp.status_code != 200:
-                    continue
-                data = resp.json()
-                text = data['candidates'][0]['content']['parts'][0]['text']
-                text = text.strip()
-                if text.startswith('```'):
-                    text = text.strip('`').lstrip('json').strip()
-                items = json.loads(text)
-                return [(item['question'], item['answer']) for item in items[:count]]
-            except Exception:
-                continue
-        return generate_quiz_questions(topic, count)
-    except Exception:
-        return generate_quiz_questions(topic, count)
+    """Legacy entry point — now delegates to the central AI layer."""
+    from .ai import ai_generate_quiz_questions
+    items, _ = ai_generate_quiz_questions(topic, count)
+    return items

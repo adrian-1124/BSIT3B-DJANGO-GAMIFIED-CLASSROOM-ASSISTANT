@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    Assignment, AttendanceEntry, Badge, ClassRoom, PointTransaction,
+    AIProvider, AILog, Assignment, AttendanceEntry, Badge, ClassRoom, PointTransaction,
     Question, Quiz, QuizAttempt, Redemption, Reward, StudentBadge,
     StudentProfile, Submission,
 )
@@ -71,3 +71,14 @@ class RewardAdmin(admin.ModelAdmin):
 @admin.register(Redemption)
 class RedemptionAdmin(admin.ModelAdmin):
     list_display = ('profile', 'reward', 'redeemed_at', 'fulfilled')
+
+
+@admin.register(AIProvider)
+class AIProviderAdmin(admin.ModelAdmin):
+    list_display = ('name', 'model_name', 'enabled', 'updated_at')
+
+
+@admin.register(AILog)
+class AILogAdmin(admin.ModelAdmin):
+    list_display = ('feature', 'provider', 'success', 'latency_ms', 'created_at')
+    list_filter = ('feature', 'provider', 'success')

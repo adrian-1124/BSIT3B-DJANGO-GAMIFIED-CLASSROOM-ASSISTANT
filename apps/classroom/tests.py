@@ -45,3 +45,42 @@ class StreakTests(TestCase):
         touch_streak(profile)
         profile.refresh_from_db()
         self.assertEqual(profile.streak_days, 1)
+
+
+class AILayerTests(TestCase):
+    def test_masked_key(self):
+        from .ai import masked_key
+        self.assertEqual(masked_key(''), 'not set')
+        self.assertEqual(masked_key('sk-or-v1-abcdef123456'), 'sk-o...3456')
+
+    def test_extract_json_array(self):
+        from .ai import _extract_json_array
+        items = _extract_json_array('```json\n[{"question": "Q?", "answer": "A"}]\n```')
+        self.assertEqual(items, [{'question': 'Q?', 'answer': 'A'}])
+
+    def test_quiz_falls_back_to_local_bank_without_network(self):
+        from unittest import mock
+        from . import ai as ai_module
+        with mock.patch.object(ai_module, 'ai_chat_json', side_effect=RuntimeError('offline')):
+            items, provider = ai_module.ai_generate_quiz_questions('math', 2)
+            self.assertEqual(provider, 'local-bank')
+            self.assertEqual(len(items), 2)
+
+    def test_feedback_falls_back_offline(self):
+        from unittest import mock
+        from . import ai as ai_module
+        with mock.patch.object(ai_module, 'ai_chat', side_effect=RuntimeError('offline')):
+            text, provider = ai_module.ai_quiz_feedback('Demo', 1, 2)
+            self.assertEqual(provider, 'local-bank')
+            self.assertIn('1/2', text)
+
+    def test_legacy_services_delegate(self):
+        from unittest import mock
+        from . import ai as ai_module
+        from .services import generate_quiz_questions_ai
+        with mock.patch.object(
+            ai_module, 'ai_generate_quiz_questions',
+            return_value=([('Q1', 'A1'), ('Q2', 'A2')], 'local-bank'),
+        ):
+            items = generate_quiz_questions_ai('math', 2)
+            self.assertEqual(items, [('Q1', 'A1'), ('Q2', 'A2')])

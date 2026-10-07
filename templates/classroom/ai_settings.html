@@ -1,0 +1,53 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">AI Provider Settings (API Keys)</h2>
+  <p class="text-muted">Keys saved here override the <code>.env</code> file. Keys are shown masked.</p>
+  <div class="card mb-3"><div class="card-body">
+    <table class="table">
+      <thead><tr><th>Provider</th><th>Model</th><th>Key</th><th>Enabled</th><th></th></tr></thead>
+      <tbody>
+        {% for p in providers %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td>{{ p.model_name|default:"—" }}</td>
+          <td><code>{{ p.masked_key }}</code></td>
+          <td>{% if p.enabled %}<span class="badge bg-green">on</span>{% else %}<span class="badge bg-red">off</span>{% endif %}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="?edit={{ p.pk }}">Edit</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+  {% if editing %}
+  <div class="card"><div class="card-body">
+    <h4>Edit {{ editing.name }}</h4>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="provider_id" value="{{ editing.pk }}">
+      <div class="mb-3">
+        <label class="form-label">API key</label>
+        <input type="password" name="api_key" class="form-control" value="{{ editing.api_key }}" autocomplete="off">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Model (OpenRouter only; blank = default)</label>
+        <input type="text" name="model_name" class="form-control" value="{{ editing.model_name }}" placeholder="openrouter/free">
+      </div>
+      <div class="mb-3">
+        <label class="form-check"><input type="checkbox" name="enabled" class="form-check-input" {% if editing.enabled %}checked{% endif %}> Enabled</label>
+      </div>
+      <button class="btn btn-primary">Save</button>
+      <a href="?" class="btn btn-link">Cancel</a>
+    </form>
+  </div></div>
+  {% endif %}
+  <div class="card mt-3"><div class="card-body">
+    <h4>Effective status (DB + .env)</h4>
+    <ul>
+      {% for s in status %}
+      <li><strong>{{ s.name }}</strong> — model: {{ s.model }} — key: <code>{{ s.key }}</code> — {% if s.enabled %}✅ ready{% else %}❌ not configured{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div></div>
+</div>
+{% endblock %}

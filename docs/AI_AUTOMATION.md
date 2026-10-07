@@ -5,6 +5,13 @@ The system integrates automation at three layers: **content generation**,
 **engagement intelligence**, and **operations**.
 
 ```
+                    ┌─────────────────────────────────┐
+                    │        AI LAYER (ai.py)         │
+                    │  OpenRouter (free) -> Gemini    │
+                    │  -> local-bank fallback         │
+                    └───────┬─────────────┬───────────┘
+                            │ questions   │ feedback/tips
+                            v             v
 ┌─────────────┐   questions   ┌──────────────┐
 │ Staff UI    │──────────────>│ AI Quiz Gen  │
 └─────┬───────┘               └──────┬───────┘
@@ -20,10 +27,33 @@ The system integrates automation at three layers: **content generation**,
 └─────────────┘              └──────────────┘
 ```
 
+## API-key resolution
+Keys resolve in this order (first hit wins):
+1. **Database** — `AIProvider` rows, editable at
+   `/classroom/staff/ai-settings/` (staff only, keys shown masked).
+2. **Environment variables** — `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`,
+   `GEMINI_API_KEY`.
+3. **`.env` file** — same names (see `.env.example`). `.env` is git-ignored.
+
+Disable a provider by unchecking *Enabled* in AI settings or removing its key.
+
+## Automations (all key-powered, all with safe fallbacks)
+| Feature | Entry | Function |
+|---|---|---|
+| Quiz generation | `/classroom/staff/ai-quiz/` | `ai.ai_generate_quiz_questions` |
+| Quiz feedback | quiz result page (automatic) | `ai.ai_quiz_feedback` |
+| Study assistant | `/classroom/ai-study/` | `ai.ai_study_guide` |
+| Assignment generator | `/classroom/staff/ai-assignment/` | `ai.ai_assignment_idea` |
+| Class insights | `/classroom/staff/ai-insights/` | `ai.ai_class_insights` |
+| Architecture status | `/classroom/ai-architecture/` | `ai.provider_status` |
+
+Every call is logged to `AILog` (feature, provider, success, latency) and
+visible on the insights + architecture pages and in Django admin.
+
 ## Layers
-1. **Content automation** — `services.generate_quiz_questions(topic, count)`
-   produces ready-to-use `Question` rows (rule-based now; swap the function
-   body for an LLM API call later without touching views).
+1. **Content automation** — quiz questions, feedback, study guides,
+   assignments, insights via `apps/classroom/ai.py` (single place to swap
+   models or add providers).
 2. **Engagement automation** — points, levels, badges, streaks handled by
    `services.award_points()` / `touch_streak()`; triggered automatically by
    quiz results, submissions, and attendance.
@@ -31,13 +61,8 @@ The system integrates automation at three layers: **content generation**,
    test suite on every push; `seed_classroom` command bootstraps demo data.
 
 ## Extension points
-- Replace `generate_quiz_questions` with an LLM (OpenAI/etc.) call.
-- Gemini support: set `GEMINI_API_KEY` in a `.env` file (see
-  `.env.example`); `generate_quiz_questions_gemini` falls back to the local
-  bank when no key is set or the API call fails.
-- OpenRouter support (free models): set `OPENROUTER_API_KEY` and
-  `OPENROUTER_MODEL` (default `openrouter/free`). `generate_quiz_questions_ai`
-  prefers OpenRouter, then Gemini, then the local bank.
+- Add a provider by adding `_call_<name>` in `ai.py` and inserting it into
+  `ai_chat`.
 - Add a nightly job (cron or Celery) that resets streaks and computes
   weekly leaderboards.
-- Add feedback copy in `quiz_result.html` generated from score bands.
+- Never commit real keys: keep them in `.env` (git-ignored) or the DB.

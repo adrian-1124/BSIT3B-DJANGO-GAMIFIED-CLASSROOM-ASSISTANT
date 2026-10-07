@@ -5,6 +5,12 @@
     <h2>{{ quiz.title }} — Results</h2>
     <p class="display-4">{{ score }}/{{ total }}</p>
     <p>You earned <strong>{{ earned }} XP</strong></p>
+    {% if feedback %}
+    <div class="alert alert-info text-start mt-3">
+      <i class="fa fa-robot"></i> {{ feedback }}
+      <br><small class="text-muted">AI feedback via {{ feedback_provider }}</small>
+    </div>
+    {% endif %}
     <a href="{% url 'classroom:quizzes' %}" class="btn btn-primary">Back to quizzes</a>
   </div></div>
 </div>

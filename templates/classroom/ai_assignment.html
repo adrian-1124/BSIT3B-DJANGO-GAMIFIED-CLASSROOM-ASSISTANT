@@ -1,0 +1,14 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">AI Assignment Generator</h2>
+  <div class="card"><div class="card-body">
+    <p class="text-muted">Enter a topic and the AI drafts a full assignment for the class.</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-primary"><i class="fa fa-robot"></i> Generate Assignment</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

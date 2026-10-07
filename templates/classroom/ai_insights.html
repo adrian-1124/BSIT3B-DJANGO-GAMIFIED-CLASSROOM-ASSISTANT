@@ -1,0 +1,36 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">AI Class Insights</h2>
+  <div class="card mb-3"><div class="card-body">
+    <h4>Current class stats</h4>
+    <p class="text-muted">{{ stats_text }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary"><i class="fa fa-robot"></i> Generate Insights</button>
+    </form>
+  </div></div>
+  {% if insights %}
+  <div class="card mb-3"><div class="card-body">
+    <h4>AI insights <span class="badge bg-blue">via {{ provider }}</span></h4>
+    <p style="white-space: pre-line;">{{ insights }}</p>
+  </div></div>
+  {% endif %}
+  <div class="card"><div class="card-body">
+    <h4>Recent AI calls</h4>
+    <table class="table">
+      <thead><tr><th>Feature</th><th>Provider</th><th>Status</th><th>Latency</th><th>When</th></tr></thead>
+      <tbody>
+        {% for l in logs %}
+        <tr>
+          <td>{{ l.feature }}</td><td>{{ l.provider }}</td>
+          <td>{% if l.success %}<span class="badge bg-green">ok</span>{% else %}<span class="badge bg-red">fail</span>{% endif %}</td>
+          <td>{{ l.latency_ms }} ms</td><td>{{ l.created_at|date:'m-d H:i' }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="text-muted">No AI calls logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+</div>
+{% endblock %}

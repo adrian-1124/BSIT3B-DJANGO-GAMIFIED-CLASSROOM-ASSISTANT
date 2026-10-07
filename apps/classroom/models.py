@@ -183,3 +183,38 @@ class Redemption(models.Model):
 
     def __str__(self):
         return f'{self.profile.user.username} redeemed {self.reward.name}'
+
+
+class AIProvider(models.Model):
+    """API-key configuration for AI providers (DB overrides .env)."""
+    PROVIDER_CHOICES = [('openrouter', 'OpenRouter'), ('gemini', 'Gemini')]
+    name = models.CharField(max_length=20, choices=PROVIDER_CHOICES, unique=True)
+    api_key = models.CharField(max_length=255, blank=True)
+    model_name = models.CharField(max_length=100, blank=True)
+    enabled = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.name} ({"on" if self.enabled else "off"})'
+
+    @property
+    def masked_key(self):
+        from .ai import masked_key
+        return masked_key(self.api_key)
+
+
+class AILog(models.Model):
+    """Usage log for AI automation calls."""
+    feature = models.CharField(max_length=50)
+    provider = models.CharField(max_length=20)
+    success = models.BooleanField(default=True)
+    latency_ms = models.PositiveIntegerField(default=0)
+    error_preview = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = 'ok' if self.success else 'fail'
+        return f'{self.feature} via {self.provider} — {status}'

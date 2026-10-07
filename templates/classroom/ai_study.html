@@ -1,0 +1,19 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3">AI Study Assistant</h2>
+  <div class="card mb-3"><div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-primary"><i class="fa fa-robot"></i> Get Study Guide</button>
+    </form>
+  </div></div>
+  {% if guide %}
+  <div class="card"><div class="card-body">
+    <h4>Study guide: {{ topic }} <span class="badge bg-blue">via {{ provider }}</span></h4>
+    <p style="white-space: pre-line;">{{ guide }}</p>
+  </div></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -9,6 +9,10 @@
     <div class="col-md-4"><div class="card card-body"><h4>{{ assignment_count }} Assignments</h4><a href="{% url 'classroom:staff_assignments' %}">Manage</a></div></div>
     <div class="col-md-4"><div class="card card-body"><h4>{{ quiz_count }} Quizzes</h4><a href="{% url 'classroom:quizzes' %}">View</a></div></div>
     <div class="col-md-4"><div class="card card-body"><h4>AI Quiz Generator</h4><a href="{% url 'classroom:ai_quiz' %}">Generate</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>AI Assignment Generator</h4><a href="{% url 'classroom:ai_assignment' %}">Generate</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>AI Class Insights</h4><a href="{% url 'classroom:ai_insights' %}">View</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>AI API Keys</h4><a href="{% url 'classroom:ai_settings' %}">Configure</a></div></div>
+    <div class="col-md-4"><div class="card card-body"><h4>AI Architecture</h4><a href="{% url 'classroom:ai_architecture' %}">View</a></div></div>
   </div>
 </div>
 {% endblock %}

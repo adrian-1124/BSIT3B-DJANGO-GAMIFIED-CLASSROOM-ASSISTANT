@@ -1,0 +1,45 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <h2 class="page-title mb-3"><i class="fa fa-robot"></i> AI Automation Architecture</h2>
+  <div class="card mb-3"><div class="card-body">
+    <h4>Provider chain</h4>
+    <p><span class="badge bg-blue">1. OpenRouter (free)</span> →
+       <span class="badge bg-green">2. Gemini</span> →
+       <span class="badge bg-yellow">3. Local bank</span></p>
+    <p class="text-muted">Every call tries the next provider on failure, so pages never break. API keys resolve from the database (<a href="{% url 'classroom:ai_settings' %}">AI settings</a>) first, then environment / <code>.env</code>.</p>
+  </div></div>
+  <div class="card mb-3"><div class="card-body">
+    <h4>Provider status</h4>
+    <ul>
+      {% for s in status %}
+      <li><strong>{{ s.name }}</strong> — model: {{ s.model }} — key: <code>{{ s.key }}</code> — {% if s.enabled %}✅ ready{% else %}❌ not configured{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div></div>
+  <div class="card mb-3"><div class="card-body">
+    <h4>Automations</h4>
+    <ul>
+      <li><strong>Quiz generation</strong> — staff page builds full quizzes from a topic.</li>
+      <li><strong>Quiz feedback</strong> — every quiz result gets AI encouragement.</li>
+      <li><strong>Study assistant</strong> — students get study guides for any topic.</li>
+      <li><strong>Assignment generator</strong> — teachers draft assignments from a topic.</li>
+      <li><strong>Class insights</strong> — teachers get AI tips from live class stats.</li>
+    </ul>
+  </div></div>
+  <div class="card"><div class="card-body">
+    <h4>Recent AI calls</h4>
+    <table class="table">
+      <thead><tr><th>Feature</th><th>Provider</th><th>Status</th><th>When</th></tr></thead>
+      <tbody>
+        {% for l in logs %}
+        <tr><td>{{ l.feature }}</td><td>{{ l.provider }}</td>
+        <td>{% if l.success %}<span class="badge bg-green">ok</span>{% else %}<span class="badge bg-red">fail</span>{% endif %}</td>
+        <td>{{ l.created_at|date:'m-d H:i' }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="text-muted">No AI calls logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+</div>
+{% endblock %}

@@ -11,7 +11,10 @@ from .models import (
     QuizAttempt, Reward, StudentProfile, Submission,
 )
 from .services import award_points, touch_streak
-from .forms import AIQuizForm, AssignmentForm, BadgeForm, ClassRoomForm, RewardForm
+from .forms import (
+    AIQuizForm, AIStudyForm, AIAssignmentForm, AIProviderForm,
+    AssignmentForm, BadgeForm, ClassRoomForm, RewardForm,
+)
 
 User = get_user_model()
 
@@ -172,8 +175,11 @@ def quiz_take(request, pk):
         QuizAttempt.objects.create(profile=profile, quiz=quiz, score=score, total=total, points_earned=earned)
         if earned:
             award_points(profile, earned, f'Quiz: {quiz.title}')
+        from .ai import ai_quiz_feedback
+        feedback, feedback_provider = ai_quiz_feedback(quiz.title, score, total)
         return render(request, 'classroom/quiz_result.html', {
             'quiz': quiz, 'score': score, 'total': total, 'earned': earned,
+            'feedback': feedback, 'feedback_provider': feedback_provider,
         })
 
     return render(request, 'classroom/quiz_take.html', {'quiz': quiz, 'questions': questions})
@@ -287,16 +293,123 @@ def ai_quiz(request):
     if request.method == 'POST':
         form = AIQuizForm(request.POST)
         if form.is_valid():
-            from .services import generate_quiz_questions_ai
+            from .ai import ai_generate_quiz_questions
             quiz = Quiz.objects.create(
                 classroom=form.cleaned_data['classroom'],
                 title=form.cleaned_data['title'],
                 reward_points=form.cleaned_data['reward_points'],
             )
-            for text, answer in generate_quiz_questions_ai(form.cleaned_data['topic'], form.cleaned_data['count']):
+            items, provider = ai_generate_quiz_questions(
+                form.cleaned_data['topic'], form.cleaned_data['count'])
+            for text, answer in items:
                 Question.objects.create(quiz=quiz, text=text, answer=answer)
-            messages.success(request, f'AI generated quiz "{quiz.title}" with {quiz.questions.count()} questions.')
+            messages.success(
+                request,
+                f'AI generated quiz "{quiz.title}" with {quiz.questions.count()} '
+                f'questions (via {provider}).')
             return redirect('classroom:quizzes')
     else:
         form = AIQuizForm()
     return render(request, 'classroom/ai_quiz.html', {'form': form})
+
+
+@login_required(login_url='login')
+def ai_study(request):
+    """Student AI study assistant: topic in, study guide out."""
+    from .ai import ai_study_guide
+    guide, provider, topic = None, None, ''
+    if request.method == 'POST':
+        form = AIStudyForm(request.POST)
+        if form.is_valid():
+            topic = form.cleaned_data['topic']
+            guide, provider = ai_study_guide(topic)
+    else:
+        form = AIStudyForm()
+    return render(request, 'classroom/ai_study.html', {
+        'form': form, 'guide': guide, 'provider': provider, 'topic': topic,
+    })
+
+
+@teacher_required
+def ai_assignment(request):
+    """Teacher AI assignment generator: topic in, Assignment row out."""
+    from .ai import ai_assignment_idea
+    if request.method == 'POST':
+        form = AIAssignmentForm(request.POST)
+        if form.is_valid():
+            classroom = form.cleaned_data['classroom']
+            topic = form.cleaned_data['topic']
+            idea, provider = ai_assignment_idea(topic, str(classroom))
+            assignment = Assignment.objects.create(
+                classroom=classroom, title=idea['title'][:150],
+                description=idea['description'], points=idea['points'],
+            )
+            messages.success(
+                request,
+                f'AI created assignment "{assignment.title}" (via {provider}).')
+            return redirect('classroom:assignments')
+    else:
+        form = AIAssignmentForm()
+    return render(request, 'classroom/ai_assignment.html', {'form': form})
+
+
+@teacher_required
+def ai_insights(request):
+    """Teacher AI class insights: stats in, teaching tips out."""
+    from django.db.models import Avg
+    from .ai import ai_class_insights
+    from .models import AILog
+
+    total_students = StudentProfile.objects.count()
+    avg_xp = StudentProfile.objects.aggregate(a=Avg('xp'))['a'] or 0
+    top = StudentProfile.objects.select_related('user').order_by('-xp')[:3]
+    inactive = StudentProfile.objects.filter(xp=0).count()
+    stats_text = (
+        f'Students: {total_students}. Average XP: {round(avg_xp)}. '
+        f'Inactive (0 XP): {inactive}. '
+        f'Top 3: {", ".join(f"{p.user.username} ({p.xp} XP)" for p in top) or "none"}. '
+        f'Quizzes: {Quiz.objects.count()}. Assignments: {Assignment.objects.count()}.'
+    )
+    insights, provider = None, None
+    if request.method == 'POST':
+        insights, provider = ai_class_insights(stats_text)
+    logs = AILog.objects.all()[:10]
+    return render(request, 'classroom/ai_insights.html', {
+        'stats_text': stats_text, 'insights': insights, 'provider': provider, 'logs': logs,
+    })
+
+
+@teacher_required
+def ai_settings(request):
+    """Manage AI provider API keys (stored in DB, override .env)."""
+    from .ai import provider_status
+    from .models import AIProvider
+    for name in ('openrouter', 'gemini'):
+        AIProvider.objects.get_or_create(name=name, defaults={'enabled': True})
+    providers = AIProvider.objects.all().order_by('name')
+
+    if request.method == 'POST':
+        pk = request.POST.get('provider_id')
+        obj = get_object_or_404(AIProvider, pk=pk)
+        form = AIProviderForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'{obj.name} API settings saved.')
+            return redirect('classroom:ai_settings')
+    else:
+        form = None
+    editing_pk = request.GET.get('edit')
+    editing = AIProvider.objects.filter(pk=editing_pk).first() if editing_pk else None
+    return render(request, 'classroom/ai_settings.html', {
+        'providers': providers, 'status': provider_status(), 'editing': editing,
+    })
+
+
+@login_required(login_url='login')
+def ai_architecture(request):
+    """Visible AI automation architecture page."""
+    from .ai import provider_status
+    from .models import AILog
+    return render(request, 'classroom/ai_architecture.html', {
+        'status': provider_status(), 'logs': AILog.objects.all()[:10],
+    })
