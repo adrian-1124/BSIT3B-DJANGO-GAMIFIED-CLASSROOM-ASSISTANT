@@ -134,22 +134,28 @@ def generate_quiz_questions_gemini(topic='math', count=5):
         'Return ONLY a JSON array like '
         '[{"question": "...", "answer": "..."}] with no markdown.'
     )
-    url = (
-        'https://generativelanguage.googleapis.com/v1beta/models/'
-        f'gemini-1.5-flash:generateContent?key={api_key}'
-    )
     payload = {'contents': [{'parts': [{'text': prompt}]}]}
 
     try:
         import requests
-        resp = requests.post(url, json=payload, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
-        text = data['candidates'][0]['content']['parts'][0]['text']
-        text = text.strip()
-        if text.startswith('```'):
-            text = text.strip('`').lstrip('json').strip()
-        items = json.loads(text)
-        return [(item['question'], item['answer']) for item in items[:count]]
+        for model in ('gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash'):
+            url = (
+                'https://generativelanguage.googleapis.com/v1beta/models/'
+                f'{model}:generateContent?key={api_key}'
+            )
+            try:
+                resp = requests.post(url, json=payload, timeout=30)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                text = data['candidates'][0]['content']['parts'][0]['text']
+                text = text.strip()
+                if text.startswith('```'):
+                    text = text.strip('`').lstrip('json').strip()
+                items = json.loads(text)
+                return [(item['question'], item['answer']) for item in items[:count]]
+            except Exception:
+                continue
+        return generate_quiz_questions(topic, count)
     except Exception:
         return generate_quiz_questions(topic, count)
