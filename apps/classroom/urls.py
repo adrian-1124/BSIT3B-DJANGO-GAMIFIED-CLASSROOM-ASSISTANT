@@ -14,6 +14,7 @@ urlpatterns = [
     path('assignments/', views.assignments_view, name='assignments'),
     path('assignments/<int:pk>/submit/', views.submit_assignment, name='submit_assignment'),
     path('rewards/', views.rewards_view, name='rewards'),
+    path('daily-bonus/', views.daily_bonus, name='daily_bonus'),
     path('staff/', views.staff_dashboard, name='staff'),
     path('staff/badges/', views.staff_badges, name='staff_badges'),
     path('staff/rewards/', views.staff_rewards, name='staff_rewards'),

@@ -35,6 +35,8 @@ def student_dashboard(request):
     if is_new_day:
         award_points(profile, 2, 'Daily login streak bonus')
 
+    show_confetti = request.session.pop('show_confetti', False)
+
     top = StudentProfile.objects.select_related('user').order_by('-xp')[:5]
     transactions = profile.transactions.all()[:10]
     badges = profile.badges.select_related('badge').all()
@@ -47,7 +49,24 @@ def student_dashboard(request):
         'badges': badges,
         'my_rank': my_rank,
         'quizzes': Quiz.objects.all()[:5],
+        'show_confetti': show_confetti,
     })
+
+
+@login_required(login_url='login')
+@require_POST
+def daily_bonus(request):
+    from datetime import date
+    profile = _profile_for(request.user)
+    if profile.last_bonus_date != date.today():
+        award_points(profile, 5, 'Daily star bonus')
+        profile.last_bonus_date = date.today()
+        profile.save(update_fields=['last_bonus_date'])
+        request.session['show_confetti'] = True
+        messages.success(request, '⭐ Daily Star Bonus: +5 XP!')
+    else:
+        messages.info(request, 'You already claimed today\'s star bonus.')
+    return redirect('classroom:dashboard')
 
 
 @login_required(login_url='login')

@@ -27,6 +27,7 @@ class StudentProfile(models.Model):
     points = models.IntegerField(default=0)
     streak_days = models.PositiveIntegerField(default=0)
     last_active_date = models.DateField(null=True, blank=True)
+    last_bonus_date = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ['-xp']
