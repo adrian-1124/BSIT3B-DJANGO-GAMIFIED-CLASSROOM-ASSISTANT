@@ -101,3 +101,55 @@ def generate_quiz_questions(topic='math', count=5):
     """Return a list of (text, answer) tuples for a quiz on the given topic."""
     bank = _TOPIC_BANKS.get(topic.lower(), _TOPIC_BANKS['math'])
     return bank[:max(1, count)]
+
+
+def _get_gemini_key():
+    import os
+    from pathlib import Path
+    key = os.environ.get('GEMINI_API_KEY')
+    if key:
+        return key.strip()
+    env_file = Path(__file__).resolve().parent.parent.parent / '.env'
+    if env_file.exists():
+        for line in env_file.read_text(encoding='utf-8').splitlines():
+            if line.strip().startswith('GEMINI_API_KEY='):
+                return line.split('=', 1)[1].strip().strip('"').strip("'")
+    return None
+
+
+def generate_quiz_questions_gemini(topic='math', count=5):
+    """Call the Gemini API to generate quiz questions.
+
+    Returns list of (text, answer) tuples, or falls back to the local bank
+    when no API key is configured or the request fails.
+    """
+    import json
+
+    api_key = _get_gemini_key()
+    if not api_key:
+        return generate_quiz_questions(topic, count)
+
+    prompt = (
+        f'Generate {count} short {topic} quiz questions for students. '
+        'Return ONLY a JSON array like '
+        '[{"question": "...", "answer": "..."}] with no markdown.'
+    )
+    url = (
+        'https://generativelanguage.googleapis.com/v1beta/models/'
+        f'gemini-1.5-flash:generateContent?key={api_key}'
+    )
+    payload = {'contents': [{'parts': [{'text': prompt}]}]}
+
+    try:
+        import requests
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        text = data['candidates'][0]['content']['parts'][0]['text']
+        text = text.strip()
+        if text.startswith('```'):
+            text = text.strip('`').lstrip('json').strip()
+        items = json.loads(text)
+        return [(item['question'], item['answer']) for item in items[:count]]
+    except Exception:
+        return generate_quiz_questions(topic, count)

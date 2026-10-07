@@ -32,6 +32,9 @@ The system integrates automation at three layers: **content generation**,
 
 ## Extension points
 - Replace `generate_quiz_questions` with an LLM (OpenAI/etc.) call.
+- Gemini support: set `GEMINI_API_KEY` in a `.env` file (see
+  `.env.example`); `generate_quiz_questions_gemini` falls back to the local
+  bank when no key is set or the API call fails.
 - Add a nightly job (cron or Celery) that resets streaks and computes
   weekly leaderboards.
 - Add feedback copy in `quiz_result.html` generated from score bands.
