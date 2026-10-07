@@ -60,6 +60,50 @@ def touch_streak(profile):
     return True
 
 
+def generate_quiz_questions_openrouter(topic='math', count=5):
+    """Call the OpenRouter API (free model) to generate quiz questions.
+
+    Falls back to the Gemini generator, then the local bank.
+    """
+    import json
+    import os
+
+    api_key = os.environ.get('OPENROUTER_API_KEY')
+    env_file_key = _get_env_value('OPENROUTER_API_KEY')
+    api_key = api_key or env_file_key
+    model = os.environ.get('OPENROUTER_MODEL') or _get_env_value('OPENROUTER_MODEL') or 'openrouter/free'
+    if not api_key:
+        return generate_quiz_questions_gemini(topic, count)
+
+    prompt = (
+        f'Generate {count} short {topic} quiz questions for students. '
+        'Return ONLY a JSON array like '
+        '[{"question": "...", "answer": "..."}] with no markdown.'
+    )
+    try:
+        import requests
+        resp = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            json={'model': model, 'messages': [{'role': 'user', 'content': prompt}]},
+            timeout=60,
+        )
+        if resp.status_code != 200:
+            return generate_quiz_questions_gemini(topic, count)
+        text = resp.json()['choices'][0]['message']['content'].strip()
+        if text.startswith('```'):
+            text = text.strip('`').lstrip('json').strip()
+        items = json.loads(text)
+        return [(item['question'], item['answer']) for item in items[:count]]
+    except Exception:
+        return generate_quiz_questions_gemini(topic, count)
+
+
+def generate_quiz_questions_ai(topic='math', count=5):
+    """Best available AI provider: OpenRouter (free) -> Gemini -> local bank."""
+    return generate_quiz_questions_openrouter(topic, count)
+
+
 # ---------------------------------------------------------------------------
 # AI automation: lightweight, dependency-free question generator.
 # Swap this implementation for an LLM API call later; views stay unchanged.
@@ -103,18 +147,22 @@ def generate_quiz_questions(topic='math', count=5):
     return bank[:max(1, count)]
 
 
-def _get_gemini_key():
+def _get_env_value(name, default=None):
     import os
     from pathlib import Path
-    key = os.environ.get('GEMINI_API_KEY')
-    if key:
-        return key.strip()
+    value = os.environ.get(name)
+    if value:
+        return value.strip()
     env_file = Path(__file__).resolve().parent.parent.parent / '.env'
     if env_file.exists():
         for line in env_file.read_text(encoding='utf-8').splitlines():
-            if line.strip().startswith('GEMINI_API_KEY='):
+            if line.strip().startswith(f'{name}='):
                 return line.split('=', 1)[1].strip().strip('"').strip("'")
-    return None
+    return default
+
+
+def _get_gemini_key():
+    return _get_env_value('GEMINI_API_KEY')
 
 
 def generate_quiz_questions_gemini(topic='math', count=5):

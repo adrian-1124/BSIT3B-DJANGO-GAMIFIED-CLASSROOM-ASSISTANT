@@ -261,13 +261,13 @@ def ai_quiz(request):
     if request.method == 'POST':
         form = AIQuizForm(request.POST)
         if form.is_valid():
-            from .services import generate_quiz_questions_gemini
+            from .services import generate_quiz_questions_ai
             quiz = Quiz.objects.create(
                 classroom=form.cleaned_data['classroom'],
                 title=form.cleaned_data['title'],
                 reward_points=form.cleaned_data['reward_points'],
             )
-            for text, answer in generate_quiz_questions_gemini(form.cleaned_data['topic'], form.cleaned_data['count']):
+            for text, answer in generate_quiz_questions_ai(form.cleaned_data['topic'], form.cleaned_data['count']):
                 Question.objects.create(quiz=quiz, text=text, answer=answer)
             messages.success(request, f'AI generated quiz "{quiz.title}" with {quiz.questions.count()} questions.')
             return redirect('classroom:quizzes')
