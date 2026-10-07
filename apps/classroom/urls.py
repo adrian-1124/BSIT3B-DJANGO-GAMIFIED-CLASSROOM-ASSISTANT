@@ -12,6 +12,7 @@ urlpatterns = [
     path('quizzes/', views.quizzes_view, name='quizzes'),
     path('quizzes/<int:pk>/take/', views.quiz_take, name='quiz_take'),
     path('quizzes/<int:pk>/review/', views.quiz_review, name='quiz_review'),
+    path('quizzes/<int:pk>/retake/', views.quiz_retake, name='quiz_retake'),
     path('assignments/', views.assignments_view, name='assignments'),
     path('assignments/<int:pk>/submit/', views.submit_assignment, name='submit_assignment'),
     path('rewards/', views.rewards_view, name='rewards'),

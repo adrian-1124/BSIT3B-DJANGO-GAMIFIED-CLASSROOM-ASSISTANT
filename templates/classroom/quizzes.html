@@ -15,6 +15,10 @@
             {% if q.pk in attempted %}
             <span class="badge bg-green">Completed</span>
             <a class="btn btn-sm btn-outline-primary ms-1" href="{% url 'classroom:quiz_review' q.pk %}">Review answers</a>
+            <form method="post" action="{% url 'classroom:quiz_retake' q.pk %}" style="display:inline;" onsubmit="return confirm('Retake this quiz? Your previous score will be cleared.');">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-warning ms-1">Retake</button>
+            </form>
             {% else %}
             <a class="btn btn-sm btn-primary" href="{% url 'classroom:quiz_take' q.pk %}">Take</a>
             {% endif %}

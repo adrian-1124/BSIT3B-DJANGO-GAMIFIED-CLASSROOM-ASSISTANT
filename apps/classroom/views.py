@@ -208,6 +208,24 @@ def quiz_review(request, pk):
 
 
 @login_required(login_url='login')
+@require_POST
+def quiz_retake(request, pk):
+    """Delete the old attempt (reversing its XP) so the quiz can be retaken.
+
+    Needed for attempts made before answers were recorded — retaking
+    stores the answers so the review page shows them afterwards.
+    """
+    quiz = get_object_or_404(Quiz, pk=pk)
+    profile = _profile_for(request.user)
+    attempt = get_object_or_404(QuizAttempt, profile=profile, quiz=quiz)
+    if attempt.points_earned:
+        award_points(profile, -attempt.points_earned, f'Quiz retake reset: {quiz.title}')
+    attempt.delete()
+    messages.info(request, f'Attempt cleared — you can now retake "{quiz.title}".')
+    return redirect('classroom:quiz_take', pk=quiz.pk)
+
+
+@login_required(login_url='login')
 def assignments_view(request):
     assignments = Assignment.objects.select_related('classroom').all()
     my_submissions = {s.assignment_id: s for s in Submission.objects.filter(student=request.user)}
